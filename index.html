@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Arcade mini-game</title>
+  <style>
+    .gameboard {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .scoreboard {
+      display: inline-block;
+    }
+    canvas {
+      border: 2px solid black;
+      background: url('./assets/game_background_1/layers/sky.png');
+      cursor: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="gameboard">
+    <div class="scoreboard">
+      <span>Score: </span><span id="score-counter">0</span>
+      <span>Lives: </span><span id="lives-counter">0</span>
+    </div>
+    <canvas height="600" width="1200" id="canvas"></canvas>
+  </div>
+
+
+  <script src="js/main.js"></script>
+</body>
+</html>
