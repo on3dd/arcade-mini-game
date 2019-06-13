@@ -13,6 +13,7 @@ let spanwTimer;
 let spawnTime = 2500;
 let scoreCount = 0;
 let livesCount = 5;
+let rocketsCount = 10;
 let vx = 0;
 
 const fps = 1000/30;
@@ -20,6 +21,7 @@ const center = canvas.height/2 - 30;
 
 document.querySelector('#score-counter').innerHTML = scoreCount;
 document.querySelector('#lives-counter').innerHTML = livesCount;
+document.querySelector('#rockets-counter').innerHTML = rocketsCount;
 
 // Массивы снарядов и врагов соответственно
 let bullets = [];
@@ -62,9 +64,20 @@ class Player extends Unit {
   move(mouseY) {
     this.y = mouseY;
   }
-  shoot(mouseY) {
-    let bullet = new Gun(10, mouseY);
-    bullets.push(bullet)
+  shoot(mouseY, num) {
+    let bullet;
+    switch (num) {
+      case 0: 
+        bullet = new Gun(10, mouseY);
+        break;
+      case 1: 
+        if (rocketsCount > 0) {
+          bullet = new Rocket(10, mouseY);
+          changeRockets(-1);
+        }
+        break;
+    };
+    if (bullet !== undefined) bullets.push(bullet);
   }
 }
 
@@ -94,6 +107,8 @@ class Bullet {
     this.x = x;
     this.y = y;
     this.img = img || gun_img;
+    this.width = 60;
+    this.height = 30;
   }
   move() {
     this.x += this.speed;
@@ -102,6 +117,7 @@ class Bullet {
     let findEnemy = enemies.find(enemy => ( ( (this.y + 15 - enemy.y >= 0) && (this.y + 15 - enemy.y <= 60) ) 
     && (this.x - enemy.x >= 0) && (this.x - enemy.x <= this.speed) && (!enemy.isShielded) ) );
     // Если было найдено совпадение - обрабатываем
+    // Иначе отрисовываем пулю
     if (findEnemy) { 
       findEnemy.hp -= this.dmg;
       bullets.splice(bullets.indexOf(this), 1);
@@ -114,18 +130,33 @@ class Bullet {
       else findEnemy.shield();
     }
     else {
-      ctx.drawImage(this.img, this.x, this.y, 60, 30);
+      ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
     }
   }
 }
 
 // Подкласс для снарядов из обычной пушки
 class Gun extends Bullet {
-  constructor(x, y, img) {
-    super(x, y, img);
+  constructor(x, y) {
+    super(x, y);
     this.dmg = 1;
     this.speed = 100;
   }
+}
+
+// Подкласс для снарядов из ракетницы
+class Rocket extends Bullet {
+  constructor(x, y) {
+    super(x, y);
+    this.dmg = 2;
+    this.speed = 40;
+    this.img = rocket_img;
+  }
+  move() {
+    this.x += this.speed;
+    this.y += Math.random() * (5 - 10) + 5;
+  }
+  
 }
 
 // Отрисовка игрового поля
@@ -160,7 +191,7 @@ function renderGame() {
       // Если юнит вышел за границы экрана - удаляем
       if (el.x <= -80) {
         // Если игрок не под щитом - вычитаем урон
-        if (!player.isShielded) decLives(1);
+        if (!player.isShielded) changeLives(-1);
         // Если hp игрока < 1 - конец игры
         if (livesCount <= 0) clearInterval(renderTimer);
         player.shield();
@@ -194,10 +225,17 @@ function incScore(value) {
 }
 
 // Изменение количества жизней
-function decLives(value) {
-  livesCount -= value;
+function changeLives(value) {
+  livesCount += value;
   document.querySelector('#lives-counter').innerHTML = livesCount;
 }
+
+// Изменение количества рокет
+function changeRockets(value) {
+  rocketsCount += value;
+  document.querySelector('#rockets-counter').innerHTML = rocketsCount;
+}
+
 
 const clouds_1 = new Image(); clouds_1.src = './assets/game_background_1/layers/clouds_1.png';
 const clouds_2 = new Image(); clouds_2.src = './assets/game_background_1/layers/clouds_2.png';
@@ -208,6 +246,7 @@ const player_img = new Image(); player_img.src = './assets/Plane/Fly(1).png';
 const enemy_img = new Image(); enemy_img.src = './assets/Plane/Flying_Enemy(1).png';
 
 const gun_img = new Image(); gun_img.src = './assets/Bullet/Bullet(1).png';
+const rocket_img = new Image(); rocket_img.src = './assets/Bullet/Missile(1).png';
 
 // Начинаем игру после загрузки изображений
 if ( document.images ) {
@@ -230,7 +269,21 @@ canvas.addEventListener('mousedown', e => {
   let mouseY = e.clientY - bounds.top - scrollY + 20;
   if (canvas.height - mouseY <  60) 
     mouseY = canvas.height - 40;
-  player.shoot(mouseY);
+  // Если была нажата левая кнопка мыши - вызываем shoot от 0
+  // Иначе вызываем shoot от 1
+  if (detectLeftButton(e)) player.shoot(mouseY, 0);
+  else player.shoot(mouseY, 1);
 })
 
-scoreCount.onchange
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// Вспомогательная функция для определения типа нажатой клавиши мыши
+function detectLeftButton(event) {
+   if ('buttons' in event) {
+      return event.buttons === 1;
+  } else if ('which' in event) {
+      return event.which === 1;
+  } else {
+      return (event.button == 1 || event.type == 'click');
+  }
+}
