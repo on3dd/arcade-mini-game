@@ -15,6 +15,7 @@ let renderTimer,              // Таймер для рендеринга игр
     livesCount = 5,           // Счетчик жизней
     levelsCount = 0,          // Счетчик уровней
     rocketsCount = 10,        // Счетчик рокет
+    killsCount = 0,           // Счетчик убитых врагов
     vx = 0,                   // Отклонение по x
     kLvl = 0,                 // Коэффициент для усиления вражеских юнитов
     isPaused = false,         // Поставлена ли игра на паузу
@@ -162,8 +163,7 @@ class Bullet {
       // Если hp самолета < 1 - удаляем
       // Иначе вешаем щит
       if (findEnemy.hp <= 0) {
-        incScore(findEnemy.value);
-        enemies.splice(enemies.indexOf(findEnemy), 1);
+        incKills(findEnemy);
         if (findEnemy.isBoss) completeBossStage();
       }
       else findEnemy.shield();
@@ -187,7 +187,7 @@ class Gun extends Bullet {
 class Rocket extends Bullet {
   constructor(x, y) {
     super(x, y);
-    this.dmg = 3 + kLvl;
+    this.dmg = 3 + 2*kLvl;
     this.speed = 20;
     this.img = rocket_img;
   }
@@ -294,7 +294,6 @@ function createEnemy() {
 // Изменение счета
 function incScore(value) {
   scoreCount += value;
-  if ( (scoreCount > 0) && (scoreCount % 500 == 0) ) changeRockets(5);
   if ( (Math.floor(scoreCount / 1000) > levelsCount) && (!isBossStage) ) startBossStage();
 }
 
@@ -315,12 +314,22 @@ function changeRockets(value) {
   rocketsCount += value;
 }
 
+// Изменение количества убитых врагов
+function incKills(el) {
+  incScore(el.value);
+  enemies.splice(enemies.indexOf(el), 1);
+  killsCount += 1;
+  if (killsCount % 10 == 0) changeRockets(5);
+}
+
+// Начало босс-стадии уровня
 function startBossStage() {
   let enemy = new Boss();
   enemies.push(enemy);
   isBossStage = !isBossStage;
 }
 
+// Завершение босс-стадии уровня
 function completeBossStage() {
   incLevel();
 }
