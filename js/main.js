@@ -18,8 +18,7 @@ let renderTimer,              // Таймер для рендеринга игр
     vx = 0,                   // Отклонение по x
     kLvl = 0,                 // Коэффициент для усиления вражеских юнитов
     isPaused = false,         // Поставлена ли игра на паузу
-    isBossStage = false,      // Находится ли уровень на стадии босса
-    isBossDefeated = false;   // Был ли побежден босс на данном уровне
+    isBossStage = false;      // Находится ли уровень на стадии босса
 
 const fps = 1000/60;                     // Количество обновлений игрового поля в секунду
 const CENTER = canvas.height/2 - 30;     // Центр canvas'а - начальная координата персонажа
@@ -37,7 +36,6 @@ class Unit {
     this.y = y || CENTER;
     this.width = 80;
     this.height = 60;
-    this.hp = 2;
     this.isShielded = false;
     this.img = img || enemy_img;
   }
@@ -86,9 +84,10 @@ class Player extends Unit {
 
 // Подкласс для вражеских юнитов
 class EnemyPlane extends Unit {
-  constructor(x, y, speed) {
+  constructor(x, y) {
     super(x, y);
-    this.speed = speed || 3;
+    this.hp = 2 + 2*kLvl;
+    this.speed = 3 + 0.1*kLvl;
     this.value = 50;
     this.dmg = 1;
     this.isBoss = false;
@@ -104,8 +103,8 @@ class EliteEnemyPlane extends EnemyPlane {
     super(x, y);
     this.width = 100;
     this.height = 75;
-    this.hp = 3;
-    this.speed = 4.5;
+    this.hp = 3 + 3*kLvl;
+    this.speed = 4.5 + 0.1*kLvl;
     this.value = 75;
     this.img = elite_enemy_img;
   }
@@ -117,8 +116,8 @@ class HeavyEnemyPlane extends EnemyPlane {
     super(x, y);
     this.width = 120;
     this.height = 90;
-    this.hp = 5;
-    this.speed = 3;
+    this.hp = 5 + 5*kLvl;
+    this.speed = 3 + 0.1*kLvl;
     this.value = 100;
     this.img = heavy_enemy_img;
   }
@@ -131,8 +130,8 @@ class Boss extends EnemyPlane {
     this.y = CENTER - 120 + 30;
     this.width = 360;
     this.height = 240;
-    this.hp = 15;
-    this.speed = 3;
+    this.hp = 15 + 10*kLvl;
+    this.speed = 3 + 0.1*kLvl;
     this.value = 300;
     this.dmg = 5;
     this.img = boss_img;
@@ -179,7 +178,7 @@ class Bullet {
 class Gun extends Bullet {
   constructor(x, y) {
     super(x, y);
-    this.dmg = 1;
+    this.dmg = 1 + kLvl;
     this.speed = 50;
   }
 }
@@ -188,7 +187,7 @@ class Gun extends Bullet {
 class Rocket extends Bullet {
   constructor(x, y) {
     super(x, y);
-    this.dmg = 3;
+    this.dmg = 3 + kLvl;
     this.speed = 20;
     this.img = rocket_img;
   }
@@ -222,6 +221,9 @@ function renderGame() {
 
     player.draw();
 
+    // Если hp игрока < 1 - конец игры
+    if (livesCount <= 0) clearInterval(renderTimer);
+
     // Двигаем все снаряды
     bullets.forEach(el => {
       el.move();
@@ -240,8 +242,6 @@ function renderGame() {
       if (el.x <= -el.width) {
         // Если игрок не под щитом - вычитаем урон
         if (!player.isShielded) changeLives(-el.dmg);
-        // Если hp игрока < 1 - конец игры
-        if (livesCount <= 0) clearInterval(renderTimer);
         player.shield();
         enemies.splice(enemies.indexOf(el), 1);
       }
@@ -280,11 +280,11 @@ function createEnemy() {
         break;
       case (3):
         if ( (num >= 0) && (num <= 0.25) ) enemy = new HeavyEnemyPlane(canvas.width, y);
-        else enemy = new EnemyPlane(canvas.width, y);
+        else enemy = new EliteEnemyPlane(canvas.width, y);
         break;
       default:
         if ( (num >= 0) && (num <= 0.5) ) enemy = new HeavyEnemyPlane(canvas.width, y);
-        else enemy = new EnemyPlane(canvas.width, y);
+        else enemy = new EliteEnemyPlane(canvas.width, y);
         break;
     }
     enemies.push(enemy);
@@ -306,6 +306,7 @@ function changeLives(value) {
 // Повышение уровеня
 function incLevel() {
   levelsCount += 1;
+  kLvl = Math.pow(levelsCount, 2);
   isBossStage = !isBossStage;
 }
 
