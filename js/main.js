@@ -17,9 +17,10 @@ let renderTimer,
     vx = 0,
     isPaused = false;
 
-const fps = 1000/30;
+const fps = 1000/60;
 const center = canvas.height/2 - 30;
 
+const cursor = document.getElementsByTagName('body')[0];
 
 // Массивы снарядов и врагов соответственно
 let bullets = [],
@@ -83,7 +84,7 @@ class Player extends Unit {
 class EnemyPlane extends Unit {
   constructor(x, y, speed) {
     super(x, y);
-    this.speed = speed || 6;
+    this.speed = speed || 3;
     this.value = 50;
   }
   move() {
@@ -139,7 +140,7 @@ class Gun extends Bullet {
   constructor(x, y) {
     super(x, y);
     this.dmg = 1;
-    this.speed = 100;
+    this.speed = 50;
   }
 }
 
@@ -148,7 +149,7 @@ class Rocket extends Bullet {
   constructor(x, y) {
     super(x, y);
     this.dmg = 3;
-    this.speed = 40;
+    this.speed = 20;
     this.img = rocket_img;
   }
   move() {
@@ -205,7 +206,7 @@ function renderGame() {
       }
     })
 
-    vx -= 4;
+    vx -= 2;
     if (vx < -1920) vx = 0;
   }, fps);
 };
@@ -275,11 +276,12 @@ canvas.addEventListener('mousemove', e => {
 canvas.addEventListener('mousedown', e => {
   if (isPaused) return false;
   let bounds  = canvas.getBoundingClientRect();
-  let mouseY = e.clientY - bounds.top - scrollY - 15;
+  let mouseY = e.clientY - bounds.top - scrollY;
   if (canvas.height - mouseY <  60) 
     mouseY = canvas.height - 40;
   // Если была нажата левая кнопка мыши - вызываем shoot от 0
   // Иначе вызываем shoot от 1
+  changeCursor();
   if (detectLeftButton(e)) player.shoot(mouseY, 0);
   else player.shoot(mouseY, 1);
 })
@@ -299,4 +301,9 @@ function detectLeftButton(event) {
   } else {
       return (event.button == 1 || event.type == 'click');
   }
+}
+
+function changeCursor() {
+  cursor.style = "cursor: url('./assets/Cursor/crosshair_hit.png'), pointer";
+  setTimeout(() => {cursor.style = "cursor: url('./assets/Cursor/crosshair.png'), pointer;"}, 100 );
 }
