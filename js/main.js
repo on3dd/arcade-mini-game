@@ -13,12 +13,13 @@ let renderTimer,
     spawnTime = 2500,
     scoreCount = 0,
     livesCount = 5,
+    levelsCount = 0,
     rocketsCount = 10,
     vx = 0,
     isPaused = false;
 
 const fps = 1000/60;
-const center = canvas.height/2 - 30;
+const CENTER = canvas.height/2 - 30;
 
 const cursor = document.getElementsByTagName('body')[0];
 
@@ -30,7 +31,7 @@ let bullets = [],
 class Unit {
   constructor(x, y, img) {
     this.x = x || canvas.width;
-    this.y = y || center;
+    this.y = y || CENTER;
     this.width = 80;
     this.height = 60;
     this.hp = 2;
@@ -93,10 +94,14 @@ class EnemyPlane extends Unit {
 }
 
 // Под-подкласс для недефолтных вражеских юнитов
-class NotDefaultEnemyPlane extends EnemyPlane {
-  constructor(x, y, speed) {
+class EliteEnemyPlane extends EnemyPlane {
+  constructor(x, y) {
     super(x, y);
-    this.speed = speed;
+    this.width = 100;
+    this.height = 75;
+    this.speed = 4.5;
+    this.value = 75;
+    this.img = elite_enemy_img;
   }
 }
 
@@ -113,7 +118,7 @@ class Bullet {
     this.x += this.speed;
   }
   checkCollision() {
-    let findEnemy = enemies.find(enemy => ( ( (this.y + 15 - enemy.y >= 0) && (this.y + 15 - enemy.y <= 60) ) 
+    let findEnemy = enemies.find(enemy => ( ( (this.y + 15 - enemy.y >= 0) && (this.y + 15 - enemy.y <= enemy.height) ) 
     && (this.x - enemy.x >= 0) && (this.x - enemy.x <= this.speed) && (!enemy.isShielded) ) );
     // Если было найдено совпадение - обрабатываем
     // Иначе отрисовываем пулю
@@ -221,7 +226,28 @@ function createEnemy() {
   spanwTimer = setInterval(() => {
     if (isPaused) return false;
     let y = Math.round(Math.random() * (canvas.height - 120) + 60);
-    let enemy = new EnemyPlane(canvas.width, y);
+    let enemy;
+    let num = Math.random();
+    switch (levelsCount) {
+      case (0):
+        enemy = new EnemyPlane(canvas.width, y);
+        break;
+      case (1):
+        if (num >= 0.25) enemy = new EnemyPlane(canvas.width, y);
+        else enemy = new EliteEnemyPlane(canvas.width, y);
+        break;
+      case (2):
+        if (num >= 0.5) enemy = new EnemyPlane(canvas.width, y);
+        else enemy = new EliteEnemyPlane(canvas.width, y);
+        break;
+      case (3):
+        if (num >= 0.75) enemy = new EnemyPlane(canvas.width, y);
+        else enemy = new EliteEnemyPlane(canvas.width, y);
+        break;
+      default:
+        enemy = new EliteEnemyPlane(canvas.width, y);
+        break;
+    }
     enemies.push(enemy);
   }, spawnTime);
 }
@@ -229,19 +255,22 @@ function createEnemy() {
 // Изменение счета
 function incScore(value) {
   scoreCount += value;
-  // document.querySelector('#score-counter').innerHTML = scoreCount;
+  if ( Math.floor(scoreCount / 1000) ) levelsCount += 1;
 }
 
 // Изменение количества жизней
 function changeLives(value) {
   livesCount += value;
-  // document.querySelector('#lives-counter').innerHTML = livesCount;
+}
+
+// Повышение уровеня
+function incLevel() {
+  levelsCount += 1;
 }
 
 // Изменение количества рокет
 function changeRockets(value) {
   rocketsCount += value;
-  // document.querySelector('#rockets-counter').innerHTML = rocketsCount;
 }
 
 
@@ -252,6 +281,7 @@ const clouds_4 = new Image(); clouds_4.src = './assets/game_background_1/layers/
 
 const player_img = new Image(); player_img.src = './assets/Plane/Fly(1).png';
 const enemy_img = new Image(); enemy_img.src = './assets/Plane/Flying_Enemy(1).png';
+const elite_enemy_img = new Image(); elite_enemy_img.src = './assets/Plane/Flying_Enemy_Elite(1).png';
 
 const gun_img = new Image(); gun_img.src = './assets/Bullet/Bullet(1).png';
 const rocket_img = new Image(); rocket_img.src = './assets/Bullet/Missile(1).png';
@@ -262,7 +292,7 @@ if ( document.images ) {
   addEnemy();
 }
 
-const player = new Player(10, center, player_img);
+const player = new Player(10, CENTER, player_img);
 
 canvas.addEventListener('mousemove', e => {
   if (isPaused) return false;
