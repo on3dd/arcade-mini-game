@@ -5,27 +5,29 @@
 // [TODO]: Таблица счета
 
 const canvas = document.querySelector('#canvas');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 const ctx = canvas.getContext('2d');
 
 // Преднастройки игры
-let renderTimer;
-let spanwTimer;
-let spawnTime = 2500;
-let scoreCount = 0;
-let livesCount = 5;
-let rocketsCount = 10;
-let vx = 0;
+let renderTimer,
+    spanwTimer,
+    spawnTime = 2500,
+    scoreCount = 0,
+    livesCount = 5,
+    rocketsCount = 10,
+    vx = 0,
+    isPaused = false;
 
 const fps = 1000/30;
 const center = canvas.height/2 - 30;
 
-document.querySelector('#score-counter').innerHTML = scoreCount;
-document.querySelector('#lives-counter').innerHTML = livesCount;
-document.querySelector('#rockets-counter').innerHTML = rocketsCount;
+// document.querySelector('#score-counter').innerHTML = scoreCount;
+// document.querySelector('#lives-counter').innerHTML = livesCount;
+// document.querySelector('#rockets-counter').innerHTML = rocketsCount;
 
 // Массивы снарядов и врагов соответственно
-let bullets = [];
-let enemies = [];
+let bullets = [],
+    enemies = [];
 
 // Основной класс для всех двигающихся юнитов
 class Unit {
@@ -126,6 +128,7 @@ class Bullet {
       if (findEnemy.hp <= 0) {
         incScore(findEnemy.value);
         enemies.splice(enemies.indexOf(findEnemy), 1);
+        if ( (scoreCount > 0) && (scoreCount % 500 == 0) ) changeRockets(5);
       }
       else findEnemy.shield();
     }
@@ -148,7 +151,7 @@ class Gun extends Bullet {
 class Rocket extends Bullet {
   constructor(x, y) {
     super(x, y);
-    this.dmg = 2;
+    this.dmg = 3;
     this.speed = 40;
     this.img = rocket_img;
   }
@@ -156,13 +159,14 @@ class Rocket extends Bullet {
     this.x += this.speed;
     this.y += Math.random() * (5 - 10) + 5;
   }
-  
 }
 
 // Отрисовка игрового поля
 function renderGame() {
   renderTimer = setInterval(() => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (isPaused) return false;
+
+    ctx.clearRect(-1920, 0, 1920*2, 1080);
 
     ctx.drawImage(clouds_1, vx, 0);
     ctx.drawImage(clouds_2, vx, 0);
@@ -172,6 +176,12 @@ function renderGame() {
     ctx.drawImage(clouds_2, vx+1920, 0);
     ctx.drawImage(clouds_3, vx+1920, 0);
     ctx.drawImage(clouds_4, vx+1920, 0);
+
+    ctx.font = "30px Arial";
+    ctx.fillText(`🏅: ${scoreCount}`, 20, 50);
+    ctx.fillText(`❤️: ${livesCount}`, 20, 150, 100);
+    ctx.fillText(`🚀: ${rocketsCount}`, 120, 150, 100);
+
     player.draw();
 
     // Двигаем все снаряды
@@ -212,6 +222,7 @@ function addEnemy() {
 // Создание вражеских юнитов
 function createEnemy() {
   spanwTimer = setInterval(() => {
+    if (isPaused) return false;
     let y = Math.round(Math.random() * (canvas.height - 120) + 60);
     let enemy = new EnemyPlane(canvas.width, y);
     enemies.push(enemy);
@@ -221,19 +232,19 @@ function createEnemy() {
 // Изменение счета
 function incScore(value) {
   scoreCount += value;
-  document.querySelector('#score-counter').innerHTML = scoreCount;
+  // document.querySelector('#score-counter').innerHTML = scoreCount;
 }
 
 // Изменение количества жизней
 function changeLives(value) {
   livesCount += value;
-  document.querySelector('#lives-counter').innerHTML = livesCount;
+  // document.querySelector('#lives-counter').innerHTML = livesCount;
 }
 
 // Изменение количества рокет
 function changeRockets(value) {
   rocketsCount += value;
-  document.querySelector('#rockets-counter').innerHTML = rocketsCount;
+  // document.querySelector('#rockets-counter').innerHTML = rocketsCount;
 }
 
 
@@ -257,6 +268,7 @@ if ( document.images ) {
 const player = new Player(10, center, player_img);
 
 canvas.addEventListener('mousemove', e => {
+  if (isPaused) return false;
   let bounds  = canvas.getBoundingClientRect();
   let mouseY = e.clientY - bounds.top - scrollY;
   if (canvas.height - mouseY <  60) 
@@ -265,6 +277,7 @@ canvas.addEventListener('mousemove', e => {
 })
 
 canvas.addEventListener('mousedown', e => {
+  if (isPaused) return false;
   let bounds  = canvas.getBoundingClientRect();
   let mouseY = e.clientY - bounds.top - scrollY + 20;
   if (canvas.height - mouseY <  60) 
@@ -276,6 +289,10 @@ canvas.addEventListener('mousedown', e => {
 })
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+document.addEventListener('keydown', e => {
+  if (e.which == 32) isPaused = !isPaused;
+});
 
 // Вспомогательная функция для определения типа нажатой клавиши мыши
 function detectLeftButton(event) {

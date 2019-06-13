@@ -1,9 +1,15 @@
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: block;
+  overflow: hidden;
+}
+
 .gameboard {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  -webkit-transform: translate(-50%, -50%);
-          transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
 }
 
 .scoreboard {
@@ -11,7 +17,6 @@
 }
 
 canvas {
-  border: 2px solid black;
   background: url("../assets/game_background_1/layers/sky.png");
 }
 /*# sourceMappingURL=style.css.map */
