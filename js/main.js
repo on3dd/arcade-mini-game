@@ -1,7 +1,6 @@
 // [TODO]: Новые типы противников, рандомный выбор
-// [TODO]: Новые типы оружия, механика с боеприпасами
 // [TOOD]: Добавить режим автоматической стрельбы по mousedown/mouseup и setInterval/clearInterval
-// [TODO]: Меню перед началом игры, возможность ставить игру на паузу
+// [TODO]: Меню перед началом игры
 // [TODO]: Таблица счета
 
 const canvas = document.querySelector('#canvas');
@@ -21,9 +20,6 @@ let renderTimer,
 const fps = 1000/30;
 const center = canvas.height/2 - 30;
 
-// document.querySelector('#score-counter').innerHTML = scoreCount;
-// document.querySelector('#lives-counter').innerHTML = livesCount;
-// document.querySelector('#rockets-counter').innerHTML = rocketsCount;
 
 // Массивы снарядов и врагов соответственно
 let bullets = [],
@@ -166,7 +162,7 @@ function renderGame() {
   renderTimer = setInterval(() => {
     if (isPaused) return false;
 
-    ctx.clearRect(-1920, 0, 1920*2, 1080);
+    ctx.clearRect(0, 0, 1920*2, 1080);
 
     ctx.drawImage(clouds_1, vx, 0);
     ctx.drawImage(clouds_2, vx, 0);
@@ -179,8 +175,8 @@ function renderGame() {
 
     ctx.font = "30px Arial";
     ctx.fillText(`🏅: ${scoreCount}`, 20, 50);
-    ctx.fillText(`❤️: ${livesCount}`, 20, 150, 100);
-    ctx.fillText(`🚀: ${rocketsCount}`, 120, 150, 100);
+    ctx.fillText(`❤️: ${livesCount}`, 20, 120, 100);
+    ctx.fillText(`🚀: ${rocketsCount}`, 120, 120, 100);
 
     player.draw();
 
@@ -270,16 +266,16 @@ const player = new Player(10, center, player_img);
 canvas.addEventListener('mousemove', e => {
   if (isPaused) return false;
   let bounds  = canvas.getBoundingClientRect();
-  let mouseY = e.clientY - bounds.top - scrollY;
-  if (canvas.height - mouseY <  60) 
-    mouseY = canvas.height - 60;
+  let mouseY = e.clientY - bounds.top - scrollY - player.height/2;
+  if (canvas.height - mouseY <  60) mouseY = canvas.height - 60;
+  else if (mouseY < 0) mouseY = 0;
   player.move(mouseY);
 })
 
 canvas.addEventListener('mousedown', e => {
   if (isPaused) return false;
   let bounds  = canvas.getBoundingClientRect();
-  let mouseY = e.clientY - bounds.top - scrollY + 20;
+  let mouseY = e.clientY - bounds.top - scrollY - 15;
   if (canvas.height - mouseY <  60) 
     mouseY = canvas.height - 40;
   // Если была нажата левая кнопка мыши - вызываем shoot от 0
