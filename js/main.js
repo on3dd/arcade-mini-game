@@ -8,18 +8,21 @@ canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 const ctx = canvas.getContext('2d');
 
 // Преднастройки игры
-let renderTimer,
-    spanwTimer,
-    spawnTime = 2500,
-    scoreCount = 0,
-    livesCount = 5,
-    levelsCount = 0,
-    rocketsCount = 10,
-    vx = 0,
-    isPaused = false;
+let renderTimer,              // Таймер для рендеринга игры
+    spanwTimer,               // Таймер для спайна юнитов
+    spawnTime = 2500,         // Интервал между спавном юнитов
+    scoreCount = 0,           // Счетчик очков
+    livesCount = 5,           // Счетчик жизней
+    levelsCount = 0,          // Счетчик уровней
+    rocketsCount = 10,        // Счетчик рокет
+    vx = 0,                   // Отклонение по x
+    kLvl = 0,                 // Коэффициент для усиления вражеских юнитов
+    isPaused = false,         // Поставлена ли игра на паузу
+    isBossStage = false,      // Находится ли уровень на стадии босса
+    isBossDefeated = false;   // Был ли побежден босс на данном уровне
 
-const fps = 1000/60;
-const CENTER = canvas.height/2 - 30;
+const fps = 1000/60;                     // Количество обновлений игрового поля в секунду
+const CENTER = canvas.height/2 - 30;     // Центр canvas'а - начальная координата персонажа
 
 const cursor = document.getElementsByTagName('body')[0];
 
@@ -87,6 +90,8 @@ class EnemyPlane extends Unit {
     super(x, y);
     this.speed = speed || 3;
     this.value = 50;
+    this.dmg = 1;
+    this.isBoss = false;
   }
   move() {
     this.x -= this.speed;
@@ -99,9 +104,39 @@ class EliteEnemyPlane extends EnemyPlane {
     super(x, y);
     this.width = 100;
     this.height = 75;
+    this.hp = 3;
     this.speed = 4.5;
     this.value = 75;
     this.img = elite_enemy_img;
+  }
+}
+
+// Под-подкласс для недефолтных вражеских юнитов
+class HeavyEnemyPlane extends EnemyPlane {
+  constructor(x, y) {
+    super(x, y);
+    this.width = 120;
+    this.height = 90;
+    this.hp = 5;
+    this.speed = 3;
+    this.value = 100;
+    this.img = heavy_enemy_img;
+  }
+}
+
+// Под-подкласс для недефолтных вражеских юнитов
+class Boss extends EnemyPlane {
+  constructor(x) {
+    super(x);
+    this.y = CENTER - 120 + 30;
+    this.width = 360;
+    this.height = 240;
+    this.hp = 15;
+    this.speed = 3;
+    this.value = 300;
+    this.dmg = 5;
+    this.img = boss_img;
+    this.isBoss = true;
   }
 }
 
@@ -130,7 +165,7 @@ class Bullet {
       if (findEnemy.hp <= 0) {
         incScore(findEnemy.value);
         enemies.splice(enemies.indexOf(findEnemy), 1);
-        if ( (scoreCount > 0) && (scoreCount % 500 == 0) ) changeRockets(5);
+        if (findEnemy.isBoss) completeBossStage();
       }
       else findEnemy.shield();
     }
@@ -183,6 +218,7 @@ function renderGame() {
     ctx.fillText(`🏅: ${scoreCount}`, 20, 50);
     ctx.fillText(`❤️: ${livesCount}`, 20, 120, 100);
     ctx.fillText(`🚀: ${rocketsCount}`, 120, 120, 100);
+    if (isBossStage) ctx.fillText(`Boss stage!`, 220, 120);
 
     player.draw();
 
@@ -201,9 +237,9 @@ function renderGame() {
       el.move();
       el.draw();
       // Если юнит вышел за границы экрана - удаляем
-      if (el.x <= -80) {
+      if (el.x <= -el.width) {
         // Если игрок не под щитом - вычитаем урон
-        if (!player.isShielded) changeLives(-1);
+        if (!player.isShielded) changeLives(-el.dmg);
         // Если hp игрока < 1 - конец игры
         if (livesCount <= 0) clearInterval(renderTimer);
         player.shield();
@@ -224,8 +260,8 @@ function addEnemy() {
 // Создание вражеских юнитов
 function createEnemy() {
   spanwTimer = setInterval(() => {
-    if (isPaused) return false;
-    let y = Math.round(Math.random() * (canvas.height - 120) + 60);
+    if ( (isPaused) || (isBossStage) ) return false;
+    let y = Math.round(Math.random() * (canvas.height - 180) + 90);
     let enemy;
     let num = Math.random();
     switch (levelsCount) {
@@ -233,19 +269,22 @@ function createEnemy() {
         enemy = new EnemyPlane(canvas.width, y);
         break;
       case (1):
-        if (num >= 0.25) enemy = new EnemyPlane(canvas.width, y);
-        else enemy = new EliteEnemyPlane(canvas.width, y);
+        if ( (num >= 0) && (num <= 0.25) ) enemy = new HeavyEnemyPlane(canvas.width, y);
+        else if ( (num >= 0.25) && (num <= 0.5) ) enemy = new EliteEnemyPlane(canvas.width, y);
+        else enemy = new EnemyPlane(canvas.width, y);
         break;
       case (2):
-        if (num >= 0.5) enemy = new EnemyPlane(canvas.width, y);
-        else enemy = new EliteEnemyPlane(canvas.width, y);
+        if ( (num >= 0) && (num <= 0.25) ) enemy = new HeavyEnemyPlane(canvas.width, y);
+        else if ( (num >= 0.25) && (num <= 0.75) ) enemy = new EliteEnemyPlane(canvas.width, y);
+        else enemy = new EnemyPlane(canvas.width, y);
         break;
       case (3):
-        if (num >= 0.75) enemy = new EnemyPlane(canvas.width, y);
-        else enemy = new EliteEnemyPlane(canvas.width, y);
+        if ( (num >= 0) && (num <= 0.25) ) enemy = new HeavyEnemyPlane(canvas.width, y);
+        else enemy = new EnemyPlane(canvas.width, y);
         break;
       default:
-        enemy = new EliteEnemyPlane(canvas.width, y);
+        if ( (num >= 0) && (num <= 0.5) ) enemy = new HeavyEnemyPlane(canvas.width, y);
+        else enemy = new EnemyPlane(canvas.width, y);
         break;
     }
     enemies.push(enemy);
@@ -255,7 +294,8 @@ function createEnemy() {
 // Изменение счета
 function incScore(value) {
   scoreCount += value;
-  if ( Math.floor(scoreCount / 1000) ) levelsCount += 1;
+  if ( (scoreCount > 0) && (scoreCount % 500 == 0) ) changeRockets(5);
+  if ( (Math.floor(scoreCount / 1000) > levelsCount) && (!isBossStage) ) startBossStage();
 }
 
 // Изменение количества жизней
@@ -266,11 +306,22 @@ function changeLives(value) {
 // Повышение уровеня
 function incLevel() {
   levelsCount += 1;
+  isBossStage = !isBossStage;
 }
 
 // Изменение количества рокет
 function changeRockets(value) {
   rocketsCount += value;
+}
+
+function startBossStage() {
+  let enemy = new Boss();
+  enemies.push(enemy);
+  isBossStage = !isBossStage;
+}
+
+function completeBossStage() {
+  incLevel();
 }
 
 
@@ -282,6 +333,8 @@ const clouds_4 = new Image(); clouds_4.src = './assets/game_background_1/layers/
 const player_img = new Image(); player_img.src = './assets/Plane/Fly(1).png';
 const enemy_img = new Image(); enemy_img.src = './assets/Plane/Flying_Enemy(1).png';
 const elite_enemy_img = new Image(); elite_enemy_img.src = './assets/Plane/Flying_Enemy_Elite(1).png';
+const heavy_enemy_img = new Image(); heavy_enemy_img.src = './assets/Plane/Flying_Enemy_Heavy(1).png';
+const boss_img = new Image(); boss_img.src = './assets/Plane/Flying_Enemy_Boss(1).png';
 
 const gun_img = new Image(); gun_img.src = './assets/Bullet/Bullet(1).png';
 const rocket_img = new Image(); rocket_img.src = './assets/Bullet/Missile(1).png';
@@ -333,6 +386,7 @@ function detectLeftButton(event) {
   }
 }
 
+// Вспомогательная функция для изменения цвета курсора при клике
 function changeCursor() {
   cursor.style = "cursor: url('./assets/Cursor/crosshair_hit.png'), pointer";
   setTimeout(() => {cursor.style = "cursor: url('./assets/Cursor/crosshair.png'), pointer;"}, 100 );
