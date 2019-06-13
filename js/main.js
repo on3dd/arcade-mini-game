@@ -1,5 +1,3 @@
-// [TODO]: Новые типы противников, рандомный выбор
-// [TOOD]: Добавить режим автоматической стрельбы по mousedown/mouseup и setInterval/clearInterval
 // [TODO]: Меню перед началом игры
 // [TODO]: Таблица счета
 
@@ -10,6 +8,7 @@ const ctx = canvas.getContext('2d');
 // Преднастройки игры
 let renderTimer,              // Таймер для рендеринга игры
     spanwTimer,               // Таймер для спайна юнитов
+    shootCounter,             // Таймер для автоматической стрельбы
     spawnTime = 2500,         // Интервал между спавном юнитов
     scoreCount = 0,           // Счетчик очков
     livesCount = 5,           // Счетчик жизней
@@ -261,7 +260,7 @@ function addEnemy() {
 function createEnemy() {
   spanwTimer = setInterval(() => {
     if ( (isPaused) || (isBossStage) ) return false;
-    let y = Math.round(Math.random() * (canvas.height - 180) + 90);
+    let y = Math.round(Math.random() * (canvas.height - 150) + 75);
     let enemy;
     let num = Math.random();
     switch (levelsCount) {
@@ -368,15 +367,20 @@ canvas.addEventListener('mousemove', e => {
 
 canvas.addEventListener('mousedown', e => {
   if (isPaused) return false;
-  let bounds  = canvas.getBoundingClientRect();
-  let mouseY = e.clientY - bounds.top - scrollY;
-  if (canvas.height - mouseY <  60) 
+  if (canvas.height - player.y <  60) 
     mouseY = canvas.height - 40;
   // Если была нажата левая кнопка мыши - вызываем shoot от 0
   // Иначе вызываем shoot от 1
   changeCursor();
-  if (detectLeftButton(e)) player.shoot(mouseY, 0);
-  else player.shoot(mouseY, 1);
+  if (detectLeftButton(e)) {
+    player.shoot(player.y + 30, 0)
+    shootCounter = setInterval(() => player.shoot(player.y + 30, 0), 200);
+  }
+  else player.shoot(player.y, 1);
+})
+
+canvas.addEventListener('mouseup', () => {
+  clearInterval(shootCounter);
 })
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -386,13 +390,13 @@ document.addEventListener('keydown', e => {
 });
 
 // Вспомогательная функция для определения типа нажатой клавиши мыши
-function detectLeftButton(event) {
-   if ('buttons' in event) {
-      return event.buttons === 1;
-  } else if ('which' in event) {
-      return event.which === 1;
+function detectLeftButton(e) {
+   if ('buttons' in e) {
+      return e.buttons === 1;
+  } else if ('which' in e) {
+      return e.which === 1;
   } else {
-      return (event.button == 1 || event.type == 'click');
+      return (e.button == 1 || e.type == 'click');
   }
 }
 
