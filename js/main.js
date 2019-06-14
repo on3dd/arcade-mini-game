@@ -5,6 +5,8 @@ const canvas = document.querySelector('#canvas');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 const ctx = canvas.getContext('2d');
 
+const localStorage = window.localStorage;
+
 // Преднастройки игры
 let renderTimer,              // Таймер для рендеринга игры
     spanwTimer,               // Таймер для спайна юнитов
@@ -23,7 +25,8 @@ let renderTimer,              // Таймер для рендеринга игр
 const fps = 1000/60;                     // Количество обновлений игрового поля в секунду
 const CENTER = canvas.height/2 - 30;     // Центр canvas'а - начальная координата персонажа
 
-const cursor = document.getElementsByTagName('body')[0];
+const gameboard = document.getElementsByClassName('gameboard')[0];
+const cursor = document.getElementsByTagName('body')[0];              // Я не помню, почему я так его назвал o_0
 
 // Массивы снарядов и врагов соответственно
 let bullets = [],
@@ -221,7 +224,10 @@ function renderGame() {
     player.draw();
 
     // Если hp игрока < 1 - конец игры
-    if (livesCount <= 0) clearInterval(renderTimer);
+    if (livesCount <= 0) {
+      showPopup();
+      clearInterval(renderTimer);
+    }
 
     // Двигаем все снаряды
     bullets.forEach(el => {
@@ -404,4 +410,27 @@ function detectLeftButton(e) {
 function changeCursor() {
   cursor.style = "cursor: url('./assets/Cursor/crosshair_hit.png'), pointer";
   setTimeout(() => {cursor.style = "cursor: url('./assets/Cursor/crosshair.png'), pointer;"}, 100 );
+}
+
+function showPopup() {
+  let popUp = document.createElement('div');
+  popUp.className = 'popup';
+  popUp.innerHTML = `<h1>Введите ваше имя:</h1>\
+                    <span>${scoreCount} очков</span>\
+                    <input type="text">\
+                    <button class="popupBtn" type="submit" onclick="addResult()">Отправить</button>`;
+  gameboard.insertBefore(popUp, gameboard.childNodes[0]);
+  // localStorage.setItem(localStorage.length+1, scoreCount);
+}
+
+function addResult() {
+  let name = document.getElementsByTagName('input')[0].value;
+  if (name == undefined) return false;
+  localStorage.setItem(name, scoreCount);
+  closePopup();
+}
+
+function closePopup() {
+  let popUp = document.getElementsByClassName('popup')[0];
+  gameboard.removeChild(popUp);
 }

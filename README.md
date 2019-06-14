@@ -12,7 +12,7 @@ Arcade mini-game on Javascript and HTML Canvas, University Web task
 ## Controls
 - **Raise** and **Lower** mouse cursor to control the character
 - **Left click** to shoot with _**Gun**_ - light and fast projectile
-- **Right click** to shoot with _**Gockets**_ - heavy and slow projectile
+- **Right click** to shoot with _**Rockets**_ - heavy and slow projectile
 - **Hold** left mouse button to shoot in _**Machine gun mode**_ 
 - **Press** space key to _**Pause**_ the game
 - **Take** damage to cause the _**Shield**_ mechanics

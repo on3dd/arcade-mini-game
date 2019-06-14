@@ -1,19 +1,80 @@
+*
+  box-sizing: border-box
+  
 body 
   width:  100%
   height: 100%
   margin: 0
+  padding: 0
+  font-size: 20px
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
   display: block
   overflow: hidden
   cursor: url('../assets/Cursor/crosshair.png'), pointer
 
 .gameboard
-  position: absolute
-  top: 0
-  left: 0
-  // transform: translate(-50%, -50%)
+  width: 100%
+  height: 100%
+  position: relative
+  margin: 0
+  padding: 0
 
-.scoreboard
-  display: inline-block
+.popup
+  text-align: center
+  cursor: default
+  position: absolute
+  max-width: 450px
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%)
+  background: rgba(255, 255, 255, .75)
+  border-radius: 20px
+  padding: 20px 30px
+  opacity: .75
+  box-shadow: 0px 0px 20px rgba(0,0,0,.25)
+  transition: all .2s ease-out
+
+  &:hover
+    opacity: 1
+    box-shadow: 0px 0px 20px rgba(0,0,0,.5)
+
+  h1
+    margin: 0
+    text-align: center
+
+  span
+    font-weight: 600
+
+  input
+    font-size: 20px
+    width: 100%
+    border-radius: 10px
+    background: none
+    box-shadow: none
+    outline: none
+    border: 4px solid rgba(0,0,0,.25)
+    padding: 5px 10px
+    transition: all .2s ease-out
+    margin: 10px 0
+
+    &:focus
+      border-color: #2980b9
+      
+  button
+    font-size: 20px
+    color: #fafafa
+    padding: 10px
+    width: 100%
+    border-radius: 10px
+    box-shadow: none
+    outline: none
+    border: none
+    background: #2ecc71
+    transition: all .2s ease-out
+
+    &:hover
+      background: #27ae60
+
 
 canvas
   background: url('../assets/game_background_1/layers/sky.png')
