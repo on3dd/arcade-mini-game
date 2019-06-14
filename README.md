@@ -50,7 +50,3 @@ Arcade mini-game on Javascript and HTML Canvas, University Web task
 - **Very high** hp
 - **300** score value
 - _**Lethal** damage!_
-
-
-## Leaderboards
-In development stage

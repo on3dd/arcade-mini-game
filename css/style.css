@@ -78,6 +78,7 @@ body {
 
 .popup button {
   font-size: 20px;
+  text-transform: uppercase;
   color: #fafafa;
   padding: 10px;
   width: 100%;
@@ -89,10 +90,46 @@ body {
   background: #2ecc71;
   -webkit-transition: all .2s ease-out;
   transition: all .2s ease-out;
+  cursor: pointer;
 }
 
 .popup button:hover {
   background: #27ae60;
+}
+
+.popup table {
+  margin: 0 auto 10px auto;
+  text-align: left;
+  width: 100%;
+}
+
+.popup table tbody tr {
+  font-size: 20px;
+  border-bottom: 5px solid black;
+}
+
+.popup table tbody tr .name {
+  width: 75%;
+}
+
+.popup table tbody tr:first-child {
+  font-size: 30px;
+}
+
+.popup table tbody tr:nth-child(2), .popup table tbody tr:nth-child(3), .popup table tbody tr:nth-child(4) {
+  font-weight: 600;
+}
+
+.popup table tbody tr:nth-child(2) {
+  color: #f1c40f;
+}
+
+.popup table tbody tr:nth-child(3) {
+  color: #7f8c8d;
+}
+
+.popup table tbody tr:nth-child(4) {
+  color: #e67e22;
 }
 
 canvas {

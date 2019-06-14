@@ -225,7 +225,11 @@ function renderGame() {
 
     // Если hp игрока < 1 - конец игры
     if (livesCount <= 0) {
-      showPopup();
+      let inner = `<h1>Введите ваше имя:</h1>\
+                    <span>${scoreCount} очков</span>\
+                    <input type="text">\
+                    <button class="popupBtn" type="submit" onclick="addResult()">Отправить</button>`;
+      showPopup(gameboard, inner);
       clearInterval(renderTimer);
     }
 
@@ -356,6 +360,10 @@ const rocket_img = new Image(); rocket_img.src = './assets/Bullet/Missile(1).png
 
 // Начинаем игру после загрузки изображений
 if ( document.images ) {
+  startGame()
+}
+
+function startGame() {
   renderGame();
   addEnemy();
 }
@@ -412,25 +420,106 @@ function changeCursor() {
   setTimeout(() => {cursor.style = "cursor: url('./assets/Cursor/crosshair.png'), pointer;"}, 100 );
 }
 
-function showPopup() {
+// Вспомогательная функция для отображения модального окна
+function showPopup(parent, inner) {
   let popUp = document.createElement('div');
   popUp.className = 'popup';
-  popUp.innerHTML = `<h1>Введите ваше имя:</h1>\
-                    <span>${scoreCount} очков</span>\
-                    <input type="text">\
-                    <button class="popupBtn" type="submit" onclick="addResult()">Отправить</button>`;
-  gameboard.insertBefore(popUp, gameboard.childNodes[0]);
-  // localStorage.setItem(localStorage.length+1, scoreCount);
+  popUp.innerHTML = inner;
+  parent.insertBefore(popUp, parent.childNodes[0]);
 }
 
+// Вспомогательная функция для получения данных из модального окна
 function addResult() {
   let name = document.getElementsByTagName('input')[0].value;
   if (name == undefined) return false;
   localStorage.setItem(name, scoreCount);
-  closePopup();
+  closePopup(gameboard);
+  showLeaderBoard();
 }
 
-function closePopup() {
-  let popUp = document.getElementsByClassName('popup')[0];
-  gameboard.removeChild(popUp);
+// Вспомогательная функция для закрытия модального окна
+function closePopup(parent) {
+  if (parent == undefined) parent = gameboard;
+  let popUp = parent.getElementsByClassName('popup')[0];
+  parent.removeChild(popUp);
+}
+
+// Вспомогательная функция для отображения таблицы рекордов
+function showLeaderBoard() {
+  let lsArr = getSortedLocalStorage();
+  let inner = '<h1>Таблица рекордов:</h1>\
+              <table>\
+              <tr>\
+              <th>Name</th>\
+              <th>Score</th>\
+              </tr>';
+
+  // Выводим топ-10 результатов
+  for (let i = 0; i < 10; i++) {
+    let medal = '';
+    switch (i) {
+      case(0): 
+        medal = '🥇 ';
+        break;
+      case(1):
+        medal = '🥈 ';
+        break;
+      case(2):
+        medal = '🥉 ';
+        break;
+    }
+
+    if (lsArr[i] == undefined) continue;
+    inner += `<tr>\
+              <td class="name">${medal}${lsArr[i].name}</td>\
+              <td class="score">${lsArr[i].score}</td>\
+              </tr>`
+  }
+  inner += '</table>\
+            <button class="popupBtn" type="submit" onclick="{closePopup(); restartGame()}">Начать заново</button>';
+  showPopup(gameboard, inner);
+}
+
+// Вспомогательная функция для получения записей в localstorage в виде отсортированного по неубыванию массива
+function getSortedLocalStorage() {
+  let localStorageArr = [];
+
+  // Заполняем массив записями из localstorage
+  for (let i = 0; i < localStorage.length; i++)
+    localStorageArr.push( {name: localStorage.key(i), score: localStorage.getItem(localStorage.key(i))} );
+
+  // Умопормачительная магия сортировки пузырьком
+  for (let i = 0; i < localStorage.length ; i++)
+    for (let j = 0; j < localStorage.length; j++)
+      if ( parseInt(localStorageArr[i].score) > parseInt(localStorageArr[j].score) ) {
+        let temp = localStorageArr[i];
+        localStorageArr[i] = localStorageArr[j];
+        localStorageArr[j] = temp;
+      }
+  return localStorageArr;
+}
+
+// Единственное, что я не придумал - как при рестарте игры по-другому обнулять переменные
+// При этом убирать их из начала кода я тоже не хочу, т.к. настройки должны быть на видном месте!
+// Поэтому я просто скопировал код сверху и вынес это в отдельные функции, чтобы не так позорно было
+function restartGame() {
+  clearInterval(renderTimer);
+  clearInterval(spanwTimer);
+  ctx.clearRect(0, 0, 1920*2, 1080);
+  updateStats();
+  startGame();
+}
+
+function updateStats() {
+  scoreCount = 0;           // Счетчик очков
+  livesCount = 5;           // Счетчик жизней
+  levelsCount = 0;          // Счетчик уровней
+  rocketsCount = 10;        // Счетчик рокет
+  killsCount = 0;           // Счетчик убитых врагов
+  vx = 0;                   // Отклонение по x
+  kLvl = 0;                 // Коэффициент для усиления вражеских юнитов
+  isPaused = false;         // Поставлена ли игра на паузу
+  isBossStage = false;      // Находится ли уровень на стадии босса
+  bullets = [];
+  enemies = [];
 }

@@ -62,6 +62,7 @@ body
       
   button
     font-size: 20px
+    text-transform: uppercase
     color: #fafafa
     padding: 10px
     width: 100%
@@ -71,9 +72,38 @@ body
     border: none
     background: #2ecc71
     transition: all .2s ease-out
+    cursor: pointer
 
     &:hover
       background: #27ae60
+  
+  table
+    margin: 0 auto 10px auto 
+    text-align: left
+    width: 100%
+
+    tbody
+      tr
+        font-size: 20px
+        border-bottom: 5px solid rgba(0,0,0,1)
+        
+        .name
+          width: 75%
+
+        &:first-child
+          font-size: 30px
+        
+        &:nth-child(2) ,&:nth-child(3), &:nth-child(4)
+          font-weight: 600
+          
+        &:nth-child(2)
+          color: #f1c40f
+        
+        &:nth-child(3)
+          color: #7f8c8d
+        
+        &:nth-child(4)
+          color: #e67e22
 
 
 canvas
